@@ -82,6 +82,11 @@ Replace the files in the served folder, then open the app with Tailscale connect
 - Stash locks after 5 minutes of inactivity, and on demand with the lock button.
 - When locked, the decrypted logins and keys are cleared from memory.
 
+### Clipboard and screen
+
+- Copied passwords and recovery codes are wiped from the clipboard after 30 seconds, and when Stash locks. Browsers only allow this while Stash is open, so if you switch away first, the wipe happens as soon as you come back.
+- A revealed password hides itself again after 20 seconds.
+
 ### Upgrades from earlier v2 data
 
 Data saved by early v2 builds (310,000 PBKDF2 rounds) still opens. On the next unlock the master-password key is re-wrapped at 600,000 rounds automatically, and the recovery-code key is re-wrapped the next time the recovery code is used. Existing master passwords shorter than 12 characters still unlock, and Stash shows a reminder to change them.

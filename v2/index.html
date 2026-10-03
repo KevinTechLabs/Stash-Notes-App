@@ -401,6 +401,8 @@ textarea{resize:vertical;min-height:90px}
   const ITER = 600000;          // PBKDF2 rounds for new keys (matches v1 / OWASP guidance)
   const LEGACY_ITER = 310000;   // older v2 data; upgraded on next unlock
   const MIN_PW = 12;
+  const CLIP_CLEAR_MS = 30 * 1000;   // copied passwords are wiped from the clipboard after this
+  const REVEAL_MS = 20 * 1000;       // revealed passwords hide themselves after this
   const IDLE_MS = 5 * 60 * 1000;
   const FOLDERS = ['Personal','Gaming','Shopping','Social Media','Banking','Other'];
   const AVATARS = [['#4C8DFF','#1F5EFF'],['#38BDF8','#0284C7'],['#818CF8','#4F46E5'],['#34D399','#059669'],['#F472B6','#DB2777'],['#FB923C','#EA580C'],['#A78BFA','#7C3AED'],['#2DD4BF','#0D9488'],['#94A3B8','#475569']];
@@ -504,7 +506,7 @@ textarea{resize:vertical;min-height:90px}
   }
   $('rcAck').addEventListener('change', () => { $('rcDone').disabled = !$('rcAck').checked; });
   $('rcDone').addEventListener('click', () => { $('rcScrim').classList.add('hidden'); rcCode = ''; const r = rcResolve; rcResolve = null; if (r) r(); });
-  $('rcCopy').addEventListener('click', () => copy(rcCode, 'Recovery code copied'));
+  $('rcCopy').addEventListener('click', () => copy(rcCode, 'Recovery code copied', true));
   $('rcSave').addEventListener('click', async () => {
     const text = `Stash recovery code\n\n${rcCode}\n\nUse this on the Stash unlock screen (Forgot password?) to set a new master password.\nKeep it somewhere safe and private.\n`;
     const r = await saveFile('stash-recovery-code.txt', text, 'text/plain');
@@ -513,6 +515,7 @@ textarea{resize:vertical;min-height:90px}
 
   // ---------- lock screen ----------
   function showLock(){
+    clearClip();
     dk = null; dkRaw = null; wrapPw = null; wrapRc = null; entries = []; detailId = null;
     closeAll(); $('rcScrim').classList.add('hidden'); rcCode = ''; rcResolve = null;
     setRecoverMode(false);
@@ -738,12 +741,15 @@ textarea{resize:vertical;min-height:90px}
     r.append(el('div',{className:'drow-main'}, el('div',{className:'drow-label',textContent:label}), val));
     if (value && opts.secret){
       const t = el('button',{className:'iconbtn',type:'button'}); t.setAttribute('aria-label','Show password'); t.append(icon('i-eye'));
-      t.onclick = () => { shown = !shown; t.textContent=''; t.append(icon(shown?'i-eyeoff':'i-eye')); t.setAttribute('aria-label', shown?'Hide password':'Show password'); paint(); };
+      let hideTimer = null;
+      const setShown = v => { shown = v; t.textContent=''; t.append(icon(shown?'i-eyeoff':'i-eye')); t.setAttribute('aria-label', shown?'Hide password':'Show password'); paint();
+        clearTimeout(hideTimer); if (shown) hideTimer = setTimeout(() => setShown(false), REVEAL_MS); };
+      t.onclick = () => setShown(!shown);
       r.append(t);
     }
     if (value && opts.copy){
       const c = el('button',{className:'iconbtn',type:'button'}); c.setAttribute('aria-label','Copy ' + label.toLowerCase()); c.append(icon('i-copy'));
-      c.onclick = () => copy(value, `${label} copied`);
+      c.onclick = () => copy(value, `${label} copied`, !!opts.secret);
       r.append(c);
     }
     if (value && opts.link){
@@ -756,15 +762,30 @@ textarea{resize:vertical;min-height:90px}
   $('dClose').addEventListener('click', () => $('detailScrim').classList.add('hidden'));
   $('dEdit').addEventListener('click', () => { $('detailScrim').classList.add('hidden'); openEditor(detailId); });
 
-  async function copy(text, msg){
-    let ok = false;
-    try { await navigator.clipboard.writeText(text); ok = true; } catch(e){}
-    if (!ok){
-      const ta = el('textarea',{value:text}); ta.style.position='fixed'; ta.style.opacity='0';
-      document.body.append(ta); ta.select();
-      try { ok = document.execCommand('copy'); } catch(e){}
-      ta.remove();
-    }
+  // ---------- clipboard ----------
+  let clipTimer = null, clipPending = false;
+  async function writeClip(text){
+    try { await navigator.clipboard.writeText(text); return true; } catch(e){}
+    const ta = el('textarea',{value:text}); ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.append(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch(e){}
+    ta.remove(); return ok;
+  }
+  async function clearClip(){
+    if (!clipPending) return;
+    // Browsers only allow clipboard writes while Stash is in front; if it isn't, try again when it comes back.
+    if (document.hasFocus && !document.hasFocus()) return;
+    if (await writeClip(' ')) { clipPending = false; clearTimeout(clipTimer); }
+  }
+  window.addEventListener('focus', clearClip);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(clearClip, 300); });
+  async function copy(text, msg, sensitive = false){
+    const ok = await writeClip(text);
+    if (ok && sensitive){
+      clipPending = true; clearTimeout(clipTimer);
+      clipTimer = setTimeout(clearClip, CLIP_CLEAR_MS);
+      msg += ' · clears in 30s';
+    } else if (ok){ clipPending = false; clearTimeout(clipTimer); }
     toast(ok ? msg : "Couldn't copy — tap the eye to reveal it", ok);
   }
 
@@ -785,7 +806,8 @@ textarea{resize:vertical;min-height:90px}
     $('editScrim').classList.remove('hidden');
     setTimeout(() => $('fTitle').focus(), 60);
   }
-  function setPwVisible(v){ $('fPass').type = v ? 'text' : 'password'; const b=$('fShow'); b.textContent=''; b.append(icon(v?'i-eyeoff':'i-eye')); b.setAttribute('aria-label', v?'Hide password':'Show password'); }
+  let editHideTimer = null;
+  function setPwVisible(v){ clearTimeout(editHideTimer); if (v) editHideTimer = setTimeout(() => setPwVisible(false), REVEAL_MS); $('fPass').type = v ? 'text' : 'password'; const b=$('fShow'); b.textContent=''; b.append(icon(v?'i-eyeoff':'i-eye')); b.setAttribute('aria-label', v?'Hide password':'Show password'); }
   function updateSave(){ $('editSave').disabled = !$('fTitle').value.trim(); }
   $('fTitle').addEventListener('input', updateSave);
   $('addBtn').addEventListener('click', () => openEditor(null));

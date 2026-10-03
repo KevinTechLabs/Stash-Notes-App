@@ -16,6 +16,7 @@ A ground-up rebuild of Stash as an installable phone app. The new version lives 
 - Folder filter chips: Personal, Gaming, Shopping, Social Media, Banking and Other.
 - Search across site, username, website, notes and folder.
 - One-tap copy for usernames and passwords; show/hide for passwords.
+- Copied passwords and recovery codes are cleared from the clipboard after 30 seconds (and when Stash locks); revealed passwords hide again after 20 seconds.
 - Login detail view with a link to open the website.
 - Settings for backups, recovery codes, changing the master password and erasing data.
 - Redesigned dark interface with A–Z grouped lists.
