@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1120">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Stash">
+<meta name="description" content="Your usernames and passwords, encrypted on your device.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Stash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5FA; --surface:#FFFFFF; --surface-2:#EEF2F8; --ink:#0E1A2E; --muted:#6A7A92;
+  --line:#E2E8F1; --blue:#1F5EFF; --blue-2:#3B82F6; --blue-soft:#E6EEFF; --on-blue:#FFFFFF;
+  --danger:#E5484D; --ok:#1F9D6B; --warn:#E29A1B;
+  --nav:rgba(242,245,250,.82);
+  --shadow:0 1px 2px rgba(14,26,46,.05),0 6px 20px -10px rgba(14,26,46,.18);
+  --sans:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1120; --surface:#141D2F; --surface-2:#1C2740; --ink:#E8EEF8; --muted:#8E9DB5;
+    --line:#233150; --blue:#4C80FF; --blue-2:#60A5FA; --blue-soft:#1A2A52; --on-blue:#FFFFFF;
+    --danger:#FF6B6F; --ok:#3CCB8E; --warn:#F2B544; --nav:rgba(10,17,32,.8);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1120; --surface:#141D2F; --surface-2:#1C2740; --ink:#E8EEF8; --muted:#8E9DB5;
+  --line:#233150; --blue:#4C80FF; --blue-2:#60A5FA; --blue-soft:#1A2A52; --on-blue:#FFFFFF;
+  --danger:#FF6B6F; --ok:#3CCB8E; --warn:#F2B544; --nav:rgba(10,17,32,.8);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.8);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--blue);outline-offset:2px}
+.hidden{display:none!important}
+svg{display:block}
+
+/* ---------- Lock screen ---------- */
+#lock{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:32px 20px;
+  background:radial-gradient(120% 60% at 50% 0%,var(--blue-soft),transparent 70%),var(--bg)}
+.lockbox{width:100%;max-width:360px;text-align:center}
+.appicon{width:96px;height:96px;margin:0 auto 20px;border-radius:26px;display:grid;place-items:center;
+  background:linear-gradient(180deg,#1E2A44 0%,#080D1A 100%);
+  box-shadow:0 18px 40px -14px rgba(31,94,255,.55),inset 0 0 0 1px rgba(110,170,255,.18),inset 0 1px 0 rgba(255,255,255,.12)}
+.appicon svg{width:48px;height:48px;color:#5B95FF;filter:drop-shadow(0 0 10px rgba(46,110,255,.7))}
+.appicon .shackle{transition:transform .35s cubic-bezier(.3,1.4,.5,1);transform-origin:16px 11px}
+.appicon.open .shackle{transform:translateY(-3px) rotate(-18deg)}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.v2{display:inline-block;vertical-align:middle;margin-left:6px;font-size:13px;font-weight:800;letter-spacing:0;color:var(--blue);background:var(--blue-soft);border-radius:999px;padding:3px 9px;position:relative;top:-3px}
+.lock-title{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0}
+.lock-sub{color:var(--muted);margin:6px 0 28px;font-size:15px}
+.input-group{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;text-align:left}
+.input-group input{border:0;border-radius:0;background:transparent;box-shadow:none}
+.input-group input + input{border-top:1px solid var(--line)}
+input[type=text],input[type=password],input[type=url],input[type=search],textarea{
+  width:100%;background:var(--surface);border:0;border-radius:12px;padding:14px 16px;outline:none;min-height:50px}
+textarea{resize:vertical;min-height:90px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;padding:14px 18px;font-weight:700;min-height:52px;font-size:16px}
+.btn-primary{background:var(--blue);color:var(--on-blue);width:100%;box-shadow:0 10px 22px -12px rgba(31,94,255,.8)}
+.btn-primary:active{transform:scale(.985)}
+.btn-primary:disabled{opacity:.6}
+.msg{min-height:22px;font-size:14px;margin-top:12px;color:var(--danger);font-weight:500}
+.note{font-size:13px;color:var(--muted);margin-top:18px;line-height:1.5}
+.linkish{background:none;border:0;color:var(--blue);font-size:14px;font-weight:600;padding:10px}
+
+/* ---------- App shell ---------- */
+.navbar{position:sticky;top:0;z-index:5;background:var(--nav);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);
+  padding-top:env(safe-area-inset-top,0px);margin-top:calc(-1 * env(safe-area-inset-top,0px));border-bottom:1px solid transparent;transition:border-color .2s}
+.navbar.scrolled{border-bottom-color:var(--line)}
+.navinner{max-width:640px;margin:0 auto;padding:10px 16px 12px}
+.navrow{display:flex;align-items:center;gap:6px;min-height:40px}
+.navrow .spacer{flex:1}
+.largetitle{font-size:34px;font-weight:800;letter-spacing:-.025em;margin:2px 0 10px;line-height:1.1;display:flex;align-items:baseline;gap:10px}
+.largetitle small{font-size:15px;font-weight:600;color:var(--muted);letter-spacing:0}
+.navbtn{width:40px;height:40px;border-radius:50%;border:0;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;padding:0}
+.navbtn svg{width:20px;height:20px}
+.search{position:relative}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
+.search input{padding:10px 14px 10px 40px;min-height:42px;border-radius:12px;background:var(--surface-2)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 0;scrollbar-width:none;margin:0 -16px;padding-left:16px;padding-right:16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:0;background:var(--surface);box-shadow:var(--shadow);border-radius:999px;padding:7px 15px;font-size:14px;font-weight:600;color:var(--muted);min-height:36px}
+.chip[aria-pressed=true]{background:var(--blue);color:var(--on-blue)}
+
+.content{max-width:640px;margin:0 auto;padding:6px 16px 130px}
+.section-label{font-size:13px;font-weight:700;color:var(--muted);margin:18px 6px 8px}
+.group{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.item{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;padding:12px 14px;position:relative}
+.item:active{background:var(--surface-2)}
+.item + .item::before{content:"";position:absolute;top:0;left:72px;right:0;height:1px;background:var(--line)}
+.avatar{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:18px;color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.item-meta{flex:1;min-width:0}
+.item-title{font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-sub{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chev{width:18px;height:18px;color:var(--muted);flex:none;opacity:.7}
+.weakdot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}
+
+.empty{text-align:center;padding:64px 24px;color:var(--muted)}
+.empty .appicon{width:72px;height:72px;border-radius:20px;margin-bottom:18px}
+.empty .appicon svg{width:34px;height:34px}
+.empty strong{display:block;color:var(--ink);font-size:19px;margin-bottom:6px}
+
+.fab{position:fixed;right:max(20px,calc(50% - 300px));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(145deg,#4C8DFF,#1F5EFF);color:#fff;border:0;display:grid;place-items:center;z-index:6;
+  box-shadow:0 14px 28px -10px rgba(31,94,255,.75)}
+.fab:active{transform:scale(.94)}
+.fab svg{width:26px;height:26px}
+
+/* ---------- Sheets ---------- */
+.scrim{position:fixed;inset:0;background:rgba(5,10,20,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:94vh;max-height:94dvh;overflow:auto;border-radius:22px 22px 0 0;
+  padding:8px 16px calc(24px + env(safe-area-inset-bottom,0px));animation:up .28s cubic-bezier(.2,.9,.3,1)}
+@media (min-width:640px){.scrim{align-items:center}.sheet{border-radius:22px;padding-bottom:24px}}
+@keyframes up{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.sheet,.scrim,.shake{animation:none}.appicon .shackle{transition:none}}
+.grabber{width:38px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 6px}
+.sheetbar{display:flex;align-items:center;justify-content:space-between;min-height:44px;margin-bottom:8px;position:sticky;top:-8px;background:var(--bg);z-index:1}
+.sheetbar h2{font-size:17px;font-weight:700;margin:0;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap}
+.textbtn{background:none;border:0;color:var(--blue);font-weight:600;font-size:16px;padding:10px 4px;min-height:44px}
+.textbtn.strong{font-weight:800}
+.textbtn:disabled{opacity:.4}
+.form-group{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+.form-row{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:52px;position:relative}
+.form-row + .form-row::before{content:"";position:absolute;top:0;left:14px;right:0;height:1px;background:var(--line)}
+.form-row label{width:92px;flex:none;font-size:15px;font-weight:600}
+.form-row input,.form-row textarea{padding:14px 0;border-radius:0;min-height:50px;background:transparent}
+.form-row.stack{flex-direction:column;align-items:stretch;padding:12px 14px}
+.form-row.stack label{width:auto;font-size:13px;color:var(--muted);font-weight:700}
+.form-row.stack textarea{padding:6px 0 0}
+.select-wrap{flex:1;position:relative;display:flex;align-items:center}
+.select-wrap select{appearance:none;-webkit-appearance:none;width:100%;border:0;background:transparent;padding:14px 28px 14px 0;min-height:50px;font-size:16px;outline:none;cursor:pointer}
+.select-wrap svg{position:absolute;right:0;width:16px;height:16px;color:var(--muted);transform:rotate(90deg);pointer-events:none}
+.select-wrap select option{background:var(--surface);color:var(--ink)}
+.pw-input{font-family:var(--mono);font-size:15px}
+.pillbtn{border:0;background:var(--blue-soft);color:var(--blue);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;min-height:34px;flex:none;display:inline-flex;align-items:center;gap:5px}
+.pillbtn svg{width:14px;height:14px}
+.meterwrap{padding:0 14px 12px;display:flex;align-items:center;gap:10px}
+.meter{flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.meter i{display:block;height:100%;width:0;border-radius:3px;transition:width .25s,background .25s}
+.meter-label{font-size:12px;font-weight:700;min-width:48px;text-align:right}
+
+/* Detail */
+.detail-hero{text-align:center;padding:10px 0 22px}
+.detail-hero .avatar{width:72px;height:72px;border-radius:20px;font-size:30px;margin:0 auto 12px}
+.detail-hero h3{font-size:24px;font-weight:800;margin:0;letter-spacing:-.01em;word-break:break-word}
+.detail-hero .cat{display:inline-block;margin-top:6px;font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border-radius:999px;padding:3px 10px}
+.drow{display:flex;align-items:center;gap:10px;padding:12px 14px;position:relative;min-height:62px}
+.drow + .drow::before{content:"";position:absolute;top:0;left:14px;right:0;height:1px;background:var(--line)}
+.drow-main{flex:1;min-width:0}
+.drow-label{font-size:13px;color:var(--muted);font-weight:600}
+.drow-val{font-size:16px;word-break:break-all;font-weight:500}
+.drow-val.mono{font-family:var(--mono);font-size:15px}
+.drow-val a{color:var(--blue);text-decoration:none}
+.iconbtn{width:38px;height:38px;border-radius:50%;border:0;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;flex:none;padding:0}
+.iconbtn svg{width:18px;height:18px}
+.notes-text{white-space:pre-wrap;font-size:15px;padding:12px 14px}
+.destructive{display:block;width:100%;background:var(--surface);border:0;border-radius:14px;box-shadow:var(--shadow);color:var(--danger);font-weight:700;padding:15px;min-height:52px}
+.updated{text-align:center;color:var(--muted);font-size:12px;margin-top:14px}
+
+/* Menu list */
+.mitem{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;padding:12px 14px;position:relative;min-height:60px}
+.mitem + .mitem::before{content:"";position:absolute;top:0;left:62px;right:0;height:1px;background:var(--line)}
+.mitem .mi{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;flex:none}
+.mitem .mi svg{width:18px;height:18px}
+.mitem span{flex:1}
+.mitem small{display:block;color:var(--muted);font-size:13px}
+.mitem.danger{color:var(--danger)}
+
+.confirm-scrim{position:fixed;inset:0;background:rgba(5,10,20,.5);z-index:40;display:flex;align-items:flex-end;justify-content:center;padding:16px 12px calc(16px + env(safe-area-inset-bottom,0px));animation:fade .15s}
+@media (min-width:640px){.confirm-scrim{align-items:center}}
+.confirm-box{width:100%;max-width:400px;display:flex;flex-direction:column;gap:8px;animation:up .22s cubic-bezier(.2,.9,.3,1)}
+.confirm-text{background:var(--surface);border-radius:16px 16px 4px 4px;padding:18px 18px 16px;text-align:center}
+.confirm-text h3{margin:0 0 4px;font-size:17px;font-weight:800}
+.confirm-text p{margin:0;color:var(--muted);font-size:14px}
+.confirm-text + .confirm-btn{margin-top:-6px;border-radius:4px 4px 16px 16px}
+.confirm-btn{background:var(--surface);border:0;border-radius:16px;min-height:54px;font-size:17px;font-weight:700;color:var(--blue)}
+.confirm-btn.danger{color:var(--danger)}
+.confirm-btn.cancel{font-weight:800}
+.rc-code{white-space:pre-line;font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:.04em;text-align:center;line-height:1.7;padding:20px 14px;word-spacing:.3em;user-select:all;-webkit-user-select:all}
+.rc-actions{display:flex;gap:10px;margin-bottom:18px}
+.rc-actions .pillbtn{flex:1;justify-content:center;min-height:44px;font-size:14px;border-radius:12px}
+.rc-check{display:flex;align-items:flex-start;gap:12px;padding:14px;cursor:pointer;font-size:15px;font-weight:500}
+.rc-check input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:var(--blue)}
+.rc-intro{text-align:center;padding:4px 8px 18px}
+.rc-intro .appicon{width:64px;height:64px;border-radius:18px;margin-bottom:14px}
+.rc-intro .appicon svg{width:30px;height:30px}
+.rc-intro h3{margin:0 0 6px;font-size:22px;font-weight:800}
+.rc-intro p{margin:0;color:var(--muted);font-size:15px}
+.code-input{font-family:var(--mono);letter-spacing:.03em;text-transform:uppercase}
+.toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;z-index:30;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);animation:fade .2s}
+.toast svg{width:16px;height:16px;color:var(--ok);flex:none}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eyeoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="shackle" d="M10 14V10a6 6 0 0 1 12 0v4"/><rect x="6" y="14" width="20" height="14" rx="4" fill="currentColor" stroke="none"/><circle cx="16" cy="20" r="2.2" fill="#0A1120" stroke="none"/><path d="M16 21.5v3" stroke="#0A1120" stroke-width="2.4"/></symbol>
+  </defs>
+</svg>
+
+<!-- Lock / setup -->
+<section id="lock" aria-live="polite">
+  <div class="lockbox">
+    <div class="appicon" id="lockIcon">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="shackle" d="M10 14V10a6 6 0 0 1 12 0v4"/><rect x="6" y="14" width="20" height="14" rx="4" fill="currentColor" stroke="none"/><circle cx="16" cy="20" r="2.2" fill="#0A1120" stroke="none"/><path d="M16 21.5v3" stroke="#0A1120" stroke-width="2.4"/></svg>
+    </div>
+    <h1 class="lock-title">Stash</h1>
+    <p class="lock-sub" id="lockSub">Enter your master password</p>
+    <form id="lockForm" autocomplete="off">
+      <div class="input-group" id="lockGroup">
+        <input type="password" id="mp1" placeholder="Master password" aria-label="Master password" required>
+        <input type="password" id="mp2" placeholder="Confirm password" aria-label="Confirm password" class="hidden">
+      </div>
+      <div class="msg" id="lockMsg"></div>
+      <button class="btn btn-primary" type="submit" id="lockBtn">Unlock</button>
+    </form>
+    <form id="recoverForm" autocomplete="off" class="hidden">
+      <div class="input-group" id="recGroup">
+        <input type="text" id="recCode" class="code-input" placeholder="Recovery code" aria-label="Recovery code" autocapitalize="characters" spellcheck="false" required>
+      </div>
+      <div class="input-group" style="margin-top:12px">
+        <input type="password" id="recPw1" placeholder="New master password" aria-label="New master password" required>
+        <input type="password" id="recPw2" placeholder="Confirm new password" aria-label="Confirm new password" required>
+      </div>
+      <div class="msg" id="recMsg"></div>
+      <button class="btn btn-primary" type="submit" id="recBtn">Reset Password</button>
+    </form>
+    <p class="note" id="lockNote"></p>
+    <button class="linkish hidden" id="resetBtn" type="button">Forgot password?</button>
+    <button class="linkish hidden" id="backBtn" type="button">Back to unlock</button>
+    <div><button class="linkish hidden" id="lostBtn" type="button" style="color:var(--muted);font-weight:500">Lost your recovery code too?</button></div>
+  </div>
+</section>
+
+<!-- App -->
+<section id="app" class="hidden">
+  <nav class="navbar" id="navbar">
+    <div class="navinner">
+      <div class="navrow">
+        <div class="spacer"></div>
+        <button class="navbtn" id="menuBtn" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+        </button>
+        <button class="navbtn" id="lockNow" aria-label="Lock Stash">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </button>
+      </div>
+      <h1 class="largetitle">Stash <small id="count"></small></h1>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Search" aria-label="Search logins">
+      </div>
+      <div class="chips" id="chips" role="toolbar" aria-label="Filter by folder"></div>
+    </div>
+  </nav>
+  <main class="content" id="list"></main>
+  <button class="fab" id="addBtn" aria-label="Add login">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</section>
+
+<!-- Detail sheet -->
+<div class="scrim hidden" id="detailScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <div class="grabber"></div>
+    <div class="sheetbar">
+      <button class="textbtn" id="dClose" type="button">Done</button>
+      <button class="textbtn strong" id="dEdit" type="button">Edit</button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<!-- Editor sheet -->
+<div class="scrim hidden" id="editScrim">
+  <form class="sheet" id="editForm" autocomplete="off" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="grabber"></div>
+    <div class="sheetbar">
+      <button type="button" class="textbtn" id="editCancel">Cancel</button>
+      <h2 id="editTitle">New Login</h2>
+      <button type="submit" class="textbtn strong" id="editSave" disabled>Save</button>
+    </div>
+    <div class="form-group">
+      <div class="form-row"><label for="fTitle">Site</label><input type="text" id="fTitle" required placeholder="Netflix, Gmail…"></div>
+      <div class="form-row"><label for="fUrl">Website</label><input type="text" inputmode="url" id="fUrl" placeholder="netflix.com" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+    </div>
+    <div class="form-group">
+      <div class="form-row"><label for="fUser">Username</label><input type="text" id="fUser" placeholder="Email or username" autocapitalize="off" spellcheck="false"></div>
+      <div class="form-row"><label for="fPass">Password</label>
+        <input type="password" id="fPass" class="pw-input" placeholder="Required" autocapitalize="off" spellcheck="false">
+        <button type="button" class="iconbtn" id="fShow" aria-label="Show password"><svg><use href="#i-eye"/></svg></button>
+      </div>
+      <div class="meterwrap">
+        <div class="meter"><i id="meterBar"></i></div>
+        <span class="meter-label" id="meterLabel"></span>
+        <button type="button" class="pillbtn" id="fGen"><svg><use href="#i-dice"/></svg>Generate</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-row"><label for="fCat">Folder</label><div class="select-wrap"><select id="fCat"></select><svg><use href="#i-chev"/></svg></div></div>
+      <div class="form-row stack"><label for="fNotes">Notes</label><textarea id="fNotes" placeholder="Security questions, PINs, recovery codes"></textarea></div>
+    </div>
+  </form>
+</div>
+
+<!-- Settings sheet -->
+<div class="scrim hidden" id="menuScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <div class="grabber"></div>
+    <div class="sheetbar"><span></span><h2 id="menuTitle">Settings</h2><button class="textbtn strong" id="menuClose">Done</button></div>
+    <div class="form-group">
+      <button class="mitem" id="mExport"><div class="mi" style="background:#1F5EFF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></div><span>Save encrypted backup<small>Opens with your master password or recovery code</small></span></button>
+      <button class="mitem" id="mImport"><div class="mi" style="background:#0EA5E9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg></div><span>Restore from backup<small>Replaces what's here</small></span></button>
+    </div>
+    <div class="form-group">
+      <button class="mitem" id="mRecovery"><div class="mi" style="background:#0F9F6E"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></div><span>New recovery code<small>Your old code stops working</small></span></button>
+      <button class="mitem" id="mChange"><div class="mi" style="background:#6366F1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3"/></svg></div><span>Change master password</span></button>
+      <button class="mitem danger" id="mWipe"><div class="mi" style="background:var(--danger)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div><span>Erase Stash</span></button>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+    <p class="note" style="padding:0 6px">Logins are encrypted on this device with AES-256 and stay in this browser. Stash locks itself after 5 minutes idle.</p>
+  </div>
+</div>
+
+<!-- Recovery code sheet -->
+<div class="scrim hidden" id="rcScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
+    <div class="grabber"></div>
+    <div class="rc-intro">
+      <div class="appicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/></svg></div>
+      <h3 id="rcTitle">Your Recovery Code</h3>
+      <p>If you forget your master password, this code is the only way back in. Write it down or save it somewhere safe, away from this device.</p>
+    </div>
+    <div class="form-group"><div class="rc-code" id="rcCode"></div></div>
+    <div class="rc-actions">
+      <button type="button" class="pillbtn" id="rcCopy"><svg><use href="#i-copy"/></svg>Copy</button>
+      <button type="button" class="pillbtn" id="rcSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Save as File</button>
+    </div>
+    <div class="form-group"><label class="rc-check"><input type="checkbox" id="rcAck">I've saved my recovery code somewhere safe</label></div>
+    <button type="button" class="btn btn-primary" id="rcDone" disabled>Continue</button>
+  </div>
+</div>
+
+<!-- Change password sheet -->
+<div class="scrim hidden" id="pwScrim">
+  <form class="sheet" id="pwForm" autocomplete="off" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+    <div class="grabber"></div>
+    <div class="sheetbar"><button type="button" class="textbtn" id="pwCancel">Cancel</button><h2 id="pwTitle">Master Password</h2><button type="submit" class="textbtn strong">Change</button></div>
+    <div class="form-group"><div class="form-row"><label for="pwOld">Current</label><input type="password" id="pwOld" required placeholder="Required"></div></div>
+    <div class="form-group">
+      <div class="form-row"><label for="pwNew">New</label><input type="password" id="pwNew" required placeholder="At least 12 characters"></div>
+      <div class="form-row"><label for="pwNew2">Verify</label><input type="password" id="pwNew2" required placeholder="Type it again"></div>
+    </div>
+    <div class="msg" id="pwMsg" style="text-align:center"></div>
+  </form>
+</div>
+
+<!-- In-app confirm dialog -->
+<div class="confirm-scrim hidden" id="confirmScrim">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="cTitle" aria-describedby="cMsg">
+    <div class="confirm-text"><h3 id="cTitle"></h3><p id="cMsg"></p></div>
+    <button type="button" class="confirm-btn" id="cOk"></button>
+    <button type="button" class="confirm-btn cancel" id="cCancel">Cancel</button>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script>
+(() => {
+  const VAULT_KEY = 'stash.v2.vault';
+  const ITER = 600000;          // PBKDF2 rounds for new keys (matches v1 / OWASP guidance)
+  const LEGACY_ITER = 310000;   // older v2 data; upgraded on next unlock
+  const MIN_PW = 12;
+  const IDLE_MS = 5 * 60 * 1000;
+  const FOLDERS = ['Personal','Gaming','Shopping','Social Media','Banking','Other'];
+  const AVATARS = [['#4C8DFF','#1F5EFF'],['#38BDF8','#0284C7'],['#818CF8','#4F46E5'],['#34D399','#059669'],['#F472B6','#DB2777'],['#FB923C','#EA580C'],['#A78BFA','#7C3AED'],['#2DD4BF','#0D9488'],['#94A3B8','#475569']];
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  const $ = id => document.getElementById(id);
+  const SHEETS = ['detailScrim','editScrim','menuScrim','pwScrim'];
+
+  let dk = null, dkRaw = null, wrapPw = null, wrapRc = null, entries = [], filter = 'All', detailId = null, editingId = null, idleTimer = null, storageOK = true;
+
+  // ---------- storage ----------
+  function readVault(){ try { const s = localStorage.getItem(VAULT_KEY); return s ? JSON.parse(s) : null; } catch(e){ storageOK = false; return null; } }
+  function writeVault(v){ try { localStorage.setItem(VAULT_KEY, JSON.stringify(v)); return true; } catch(e){ storageOK = false; return false; } }
+  function wipeVault(){ try { localStorage.removeItem(VAULT_KEY); } catch(e){} }
+
+  // ---------- crypto ----------
+  const b64 = buf => { let s=''; const b=new Uint8Array(buf); for (let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); };
+  const unb64 = str => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+  async function deriveKey(pw, saltBytes, iterations = ITER){
+    const base = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({name:'PBKDF2', salt:saltBytes, iterations, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+  }
+  // Vault v2: a random data key encrypts the logins. That key is stored twice,
+  // once locked by the master password and once by the recovery code.
+  const importDK = raw => crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+  async function wrap(raw, secret){
+    const s = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const k = await deriveKey(secret, s);
+    return {iter:ITER, salt:b64(s), iv:b64(iv), ct:b64(await crypto.subtle.encrypt({name:'AES-GCM', iv}, k, raw))};
+  }
+  async function unwrap(w, secret){
+    const k = await deriveKey(secret, unb64(w.salt), w.iter || LEGACY_ITER);
+    return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(w.iv)}, k, unb64(w.ct)));
+  }
+  async function decryptEntries(v, key){
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(v.iv)}, key, unb64(v.data));
+    const d = JSON.parse(dec.decode(pt)); return Array.isArray(d) ? d : [];
+  }
+  async function useDataKey(raw){ dkRaw = raw; dk = await importDK(raw); }
+  async function persist(){
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, dk, enc.encode(JSON.stringify(entries)));
+    const v = {v:2, app:'stash', pw:wrapPw, rc:wrapRc, iv:b64(iv), data:b64(ct)};
+    if (!writeVault(v)) toast("Couldn't save in this browser", false);
+    return v;
+  }
+  const isV2 = v => v && v.v === 2 && v.pw && v.iv && v.data;
+  const isV1 = v => v && v.v !== 2 && v.salt && v.iv && v.data;
+  // Opens a vault with the master password. Older (v1) stashes are upgraded; returns true if a recovery code must be created.
+  async function unlockWithPassword(v, pw){
+    if (isV2(v)){
+      await useDataKey(await unwrap(v.pw, pw));
+      entries = await decryptEntries(v, dk);
+      wrapPw = v.pw; wrapRc = v.rc || null;
+      if ((v.pw.iter || LEGACY_ITER) < ITER){ wrapPw = await wrap(dkRaw, pw); await persist(); }
+      return !wrapRc;
+    }
+    const oldKey = await deriveKey(pw, unb64(v.salt), v.iter || LEGACY_ITER);
+    entries = await decryptEntries(v, oldKey);
+    await useDataKey(crypto.getRandomValues(new Uint8Array(32)));
+    wrapPw = await wrap(dkRaw, pw); wrapRc = null;
+    await persist();
+    return true;
+  }
+
+  // ---------- saving files (works inside Claude and as a standalone phone app) ----------
+  async function saveFile(filename, text, mime){
+    try { const dl = window.claude && await window.claude.use('downloads'); if (dl){ await dl.save({filename, data:text}); return 'saved'; } }
+    catch(err){ if (err && err.code === 'declined') return 'cancelled'; }
+    try {
+      const file = new File([text], filename, {type:mime});
+      if (navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:filename}); return 'saved'; }
+    } catch(err){ if (err && err.name === 'AbortError') return 'cancelled'; }
+    try {
+      const url = URL.createObjectURL(new Blob([text], {type:mime}));
+      const a = el('a',{href:url, download:filename}); document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000); return 'saved';
+    } catch(err){ return 'failed'; }
+  }
+
+  // ---------- recovery codes ----------
+  const RC_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function newRecoveryCode(){
+    const b = crypto.getRandomValues(new Uint8Array(24));
+    const chars = [...b].map(x => RC_ALPHA[x % 32]).join('');
+    return chars.match(/.{4}/g).join('-');
+  }
+  const normCode = c => c.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  async function issueRecoveryCode(){
+    const code = newRecoveryCode();
+    wrapRc = await wrap(dkRaw, normCode(code));
+    await persist();
+    return code;
+  }
+  let rcResolve = null, rcCode = '';
+  function showRecovery(code){
+    rcCode = code;
+    const g = code.split('-'); $('rcCode').textContent = g.slice(0,3).join('-') + '\n' + g.slice(3).join('-');
+    $('rcAck').checked = false; $('rcDone').disabled = true;
+    $('rcScrim').classList.remove('hidden');
+    return new Promise(res => { rcResolve = res; });
+  }
+  $('rcAck').addEventListener('change', () => { $('rcDone').disabled = !$('rcAck').checked; });
+  $('rcDone').addEventListener('click', () => { $('rcScrim').classList.add('hidden'); rcCode = ''; const r = rcResolve; rcResolve = null; if (r) r(); });
+  $('rcCopy').addEventListener('click', () => copy(rcCode, 'Recovery code copied'));
+  $('rcSave').addEventListener('click', async () => {
+    const text = `Stash recovery code\n\n${rcCode}\n\nUse this on the Stash unlock screen (Forgot password?) to set a new master password.\nKeep it somewhere safe and private.\n`;
+    const r = await saveFile('stash-recovery-code.txt', text, 'text/plain');
+    if (r === 'saved') toast('Recovery code saved'); else if (r === 'failed') toast("Couldn't save — copy it instead", false);
+  });
+
+  // ---------- lock screen ----------
+  function showLock(){
+    dk = null; dkRaw = null; wrapPw = null; wrapRc = null; entries = []; detailId = null;
+    closeAll(); $('rcScrim').classList.add('hidden'); rcCode = ''; rcResolve = null;
+    setRecoverMode(false);
+    $('app').classList.add('hidden'); $('lock').classList.remove('hidden');
+    $('lockIcon').classList.remove('open');
+    $('mp1').value = ''; $('mp2').value = ''; $('lockMsg').textContent = '';
+    const setup = !readVault();
+    $('mp2').classList.toggle('hidden', !setup);
+    $('mp2').required = setup;
+    $('mp1').placeholder = setup ? 'Create master password' : 'Master password';
+    $('lockBtn').textContent = setup ? 'Create Stash' : 'Unlock';
+    $('lockSub').textContent = setup ? 'Your passwords, locked with one key' : 'Enter your master password';
+    let note = setup ? "Everything is encrypted on this device. Next, you'll get a recovery code in case you ever forget this password." : '';
+    if (!storageOK) note += " This browser is blocking storage, so nothing will be kept after you close the page.";
+    $('lockNote').textContent = note.trim();
+    $('resetBtn').classList.toggle('hidden', setup);
+    setTimeout(() => $('mp1').focus(), 60);
+  }
+  function lockError(t){
+    $('lockMsg').textContent = t;
+    const g = $('lockGroup'); g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake');
+  }
+  $('lockForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const pw = $('mp1').value, v = readVault(), btn = $('lockBtn');
+    $('lockMsg').textContent = '';
+    if (!v){
+      if (pw.length < MIN_PW) return lockError(`Use at least ${MIN_PW} characters`);
+      if (pw !== $('mp2').value) return lockError("Passwords don't match");
+    }
+    btn.disabled = true; const label = btn.textContent; btn.textContent = v ? 'Unlocking…' : 'Creating…';
+    try {
+        let needCode = false;
+      if (!v){
+        await useDataKey(crypto.getRandomValues(new Uint8Array(32)));
+        wrapPw = await wrap(dkRaw, pw); wrapRc = null; entries = [];
+        await persist();
+        needCode = true;
+      } else {
+        try { needCode = await unlockWithPassword(v, pw); }
+        catch(err){ btn.textContent = label; lockError('Incorrect password'); $('mp1').select(); return; }
+        if (pw.length < MIN_PW) setTimeout(() => toast(`Tip: change to a ${MIN_PW}+ character master password in Settings`, false), 900);
+      }
+      $('lockIcon').classList.add('open');
+      setTimeout(async () => {
+        enterApp();
+        if (needCode){ const code = await issueRecoveryCode(); await showRecovery(code); }
+      }, 320);
+    } finally { btn.disabled = false; }
+  });
+  async function eraseAndStartOver(msg){
+    if (await askConfirm({title:'Start over?', message:msg, ok:'Erase and Start Over'})){ wipeVault(); showLock(); }
+  }
+  function setRecoverMode(on){
+    $('lockForm').classList.toggle('hidden', on);
+    $('recoverForm').classList.toggle('hidden', !on);
+    $('backBtn').classList.toggle('hidden', !on);
+    $('lostBtn').classList.toggle('hidden', !on);
+    $('resetBtn').classList.toggle('hidden', on || !readVault());
+    $('lockSub').textContent = on ? 'Enter your recovery code and pick a new master password' : (readVault() ? 'Enter your master password' : 'Your passwords, locked with one key');
+    $('lockNote').classList.toggle('hidden', on);
+    ['recCode','recPw1','recPw2'].forEach(i => $(i).value = ''); $('recMsg').textContent = '';
+    if (on) setTimeout(() => $('recCode').focus(), 60);
+  }
+  $('resetBtn').addEventListener('click', () => {
+    const v = readVault();
+    if (isV2(v) && v.rc) setRecoverMode(true);
+    else eraseAndStartOver("This Stash doesn't have a recovery code yet, so a forgotten password can't be reset. Starting over erases every login.");
+  });
+  $('backBtn').addEventListener('click', () => { setRecoverMode(false); setTimeout(() => $('mp1').focus(), 60); });
+  $('lostBtn').addEventListener('click', () => eraseAndStartOver("Without your master password or recovery code, your logins can't be unlocked by anyone. Starting over erases them."));
+  $('recCode').addEventListener('input', e => {
+    const n = normCode(e.target.value).slice(0,24);
+    const f = n.match(/.{1,4}/g)?.join('-') || '';
+    if (f !== e.target.value) e.target.value = f;
+  });
+  $('recoverForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const v = readVault(), btn = $('recBtn'), m = $('recMsg');
+    const err = t => { m.textContent = t; const g = $('recGroup'); g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake'); };
+    m.textContent = '';
+    const code = normCode($('recCode').value), p1 = $('recPw1').value;
+    if (code.length !== 24) return err('Recovery codes are 24 letters and numbers');
+    if (p1.length < MIN_PW) return err(`Use at least ${MIN_PW} characters for the new password`);
+    if (p1 !== $('recPw2').value) return err("New passwords don't match");
+    btn.disabled = true; btn.textContent = 'Checking…';
+    try {
+      try { await useDataKey(await unwrap(v.rc, code)); entries = await decryptEntries(v, dk); }
+      catch(x){ dk = null; dkRaw = null; return err("That recovery code isn't right"); }
+      wrapRc = (v.rc.iter || LEGACY_ITER) < ITER ? await wrap(dkRaw, code) : v.rc;
+      wrapPw = await wrap(dkRaw, p1);
+      await persist();
+      $('lockIcon').classList.add('open');
+      setTimeout(() => { enterApp(); toast('Master password reset'); }, 320);
+    } finally { btn.disabled = false; btn.textContent = 'Reset Password'; }
+  });
+  function enterApp(){
+    $('lock').classList.add('hidden'); $('app').classList.remove('hidden');
+    $('q').value = ''; filter = 'All'; window.scrollTo(0,0);
+    render(); bumpIdle();
+  }
+
+  // ---------- idle lock ----------
+  function bumpIdle(){ if (!dk) return; clearTimeout(idleTimer); idleTimer = setTimeout(() => { if (!dk) return; if (rcResolve){ bumpIdle(); return; } showLock(); }, IDLE_MS); }
+  ['pointerdown','keydown','scroll','touchstart'].forEach(ev => window.addEventListener(ev, bumpIdle, {passive:true}));
+  $('lockNow').addEventListener('click', showLock);
+  window.addEventListener('scroll', () => $('navbar').classList.toggle('scrolled', window.scrollY > 4), {passive:true});
+
+  // ---------- helpers ----------
+  const cats = () => { const s = new Set(); entries.forEach(e => e.cat && s.add(e.cat)); return [...s].sort((a,b)=>a.localeCompare(b)); };
+  function el(tag, props={}, ...kids){ const n=document.createElement(tag); Object.assign(n, props); kids.forEach(k => k!=null && n.append(k)); return n; }
+  function icon(id){ const s=document.createElementNS('http://www.w3.org/2000/svg','svg'); const u=document.createElementNS('http://www.w3.org/2000/svg','use'); u.setAttribute('href','#'+id); s.append(u); return s; }
+  function avatar(title){
+    let h=0; for (const c of (title||'?').toLowerCase()) h = (h*31 + c.charCodeAt(0))>>>0;
+    const [a,b] = AVATARS[h % AVATARS.length];
+    const d = el('div',{className:'avatar',textContent:(title.trim()[0]||'?').toUpperCase()});
+    d.style.background = `linear-gradient(145deg,${a},${b})`;
+    return d;
+  }
+  function strength(p){
+    if (!p) return null;
+    let pool = 0; if (/[a-z]/.test(p)) pool+=26; if (/[A-Z]/.test(p)) pool+=26; if (/\d/.test(p)) pool+=10; if (/[^a-zA-Z0-9]/.test(p)) pool+=32;
+    const bits = p.length * Math.log2(Math.max(pool,1));
+    return bits < 40 ? {t:'Weak',w:'28%',c:'var(--danger)',weak:true} : bits < 70 ? {t:'Fair',w:'62%',c:'var(--warn)',weak:false} : {t:'Strong',w:'100%',c:'var(--ok)',weak:false};
+  }
+
+  // ---------- list ----------
+  function render(){
+    const all = cats();
+    $('count').textContent = entries.length ? `${entries.length} ${entries.length === 1 ? 'login' : 'logins'}` : '';
+    const chips = $('chips'); chips.textContent = '';
+    if (filter !== 'All' && !all.includes(filter)) filter = 'All';
+    if (all.length){
+      ['All', ...all].forEach(c => {
+        const b = el('button', {className:'chip', type:'button', textContent:c});
+        b.setAttribute('aria-pressed', String(c === filter));
+        b.onclick = () => { filter = c; render(); };
+        chips.append(b);
+      });
+    }
+    chips.classList.toggle('hidden', !all.length);
+
+    const q = $('q').value.trim().toLowerCase();
+    const shown = entries
+      .filter(e => filter === 'All' || e.cat === filter)
+      .filter(e => !q || [e.title,e.user,e.url,e.notes,e.cat].some(x => (x||'').toLowerCase().includes(q)))
+      .sort((a,b) => a.title.localeCompare(b.title, undefined, {sensitivity:'base'}));
+
+    const list = $('list'); list.textContent = '';
+    if (!entries.length || !shown.length){
+      const ic = el('div',{className:'appicon'}); ic.innerHTML = $('lockIcon').innerHTML;
+      list.append(el('div',{className:'empty'}, ic,
+        el('strong',{textContent: entries.length ? 'No results' : 'No logins yet'}),
+        entries.length ? 'Try another search or folder.' : 'Tap + to stash your first login.'));
+      return;
+    }
+    // group by first letter
+    let letter = null, group = null;
+    shown.forEach(e => {
+      const L = /[a-z]/i.test(e.title[0]) ? e.title[0].toUpperCase() : '#';
+      if (L !== letter){ letter = L; list.append(el('div',{className:'section-label',textContent:L})); group = el('div',{className:'group'}); list.append(group); }
+      const s = strength(e.pass);
+      const item = el('button',{className:'item',type:'button'},
+        avatar(e.title),
+        el('div',{className:'item-meta'}, el('div',{className:'item-title',textContent:e.title}), el('div',{className:'item-sub',textContent:e.user || e.url || 'No username'})),
+        s && s.weak ? el('span',{className:'weakdot',title:'Weak password'}) : null,
+        (() => { const c = icon('i-chev'); c.setAttribute('class','chev'); return c; })()
+      );
+      item.onclick = () => openDetail(e.id);
+      group.append(item);
+    });
+  }
+  $('q').addEventListener('input', render);
+
+  // ---------- detail ----------
+  function openDetail(id){
+    detailId = id;
+    const e = entries.find(x => x.id === id); if (!e) return;
+    const body = $('detailBody'); body.textContent = '';
+    const hero = el('div',{className:'detail-hero'}, avatar(e.title), el('h3',{id:'dTitle',textContent:e.title}));
+    if (e.cat) hero.append(el('div'), el('span',{className:'cat',textContent:e.cat}));
+    body.append(hero);
+
+    const g = el('div',{className:'form-group'});
+    g.append(drow('Username', e.user, {copy:true}));
+    g.append(drow('Password', e.pass, {copy:true, secret:true}));
+    if (e.url) g.append(drow('Website', e.url, {link:true}));
+    body.append(g);
+
+    const s = strength(e.pass);
+    if (s && s.weak){
+      const w = el('div',{className:'form-group'});
+      const r = el('div',{className:'drow'}, el('span',{className:'weakdot'}), el('div',{className:'drow-main'}, el('div',{className:'drow-val',textContent:'Weak password'}), el('div',{className:'drow-label',textContent:'Consider changing it on the site and updating it here.'})));
+      w.append(r); body.append(w);
+    }
+    if (e.notes){
+      body.append(el('div',{className:'section-label',textContent:'Notes'}));
+      body.append(el('div',{className:'form-group'}, el('div',{className:'notes-text',textContent:e.notes})));
+    }
+    const del = el('button',{className:'destructive',type:'button',textContent:'Delete Login'});
+    del.onclick = async () => {
+      if (!(await askConfirm({title:`Delete ${e.title}?`, message:'This login will be permanently removed.', ok:'Delete Login'}))) return;
+      entries = entries.filter(x => x.id !== e.id);
+      await persist(); $('detailScrim').classList.add('hidden'); render(); toast('Login deleted');
+    };
+    body.append(del);
+    if (e.updated) body.append(el('div',{className:'updated',textContent:'Last edited ' + new Date(e.updated).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}));
+    $('detailScrim').classList.remove('hidden');
+  }
+  function drow(label, value, opts){
+    const r = el('div',{className:'drow'});
+    const val = el('div',{className:'drow-val' + (opts.secret ? ' mono' : '')});
+    let shown = !opts.secret;
+    const paint = () => {
+      val.textContent = '';
+      if (!value){ val.textContent = '—'; val.style.color='var(--muted)'; return; }
+      if (opts.link){
+        const safe = /^https?:\/\//i.test(value) ? value : 'https://' + value;
+        val.append(el('a',{href:safe,target:'_blank',rel:'noopener noreferrer',textContent:value.replace(/^https?:\/\//i,'')}));
+      } else val.textContent = shown ? value : '•'.repeat(Math.min(value.length, 12));
+    };
+    paint();
+    r.append(el('div',{className:'drow-main'}, el('div',{className:'drow-label',textContent:label}), val));
+    if (value && opts.secret){
+      const t = el('button',{className:'iconbtn',type:'button'}); t.setAttribute('aria-label','Show password'); t.append(icon('i-eye'));
+      t.onclick = () => { shown = !shown; t.textContent=''; t.append(icon(shown?'i-eyeoff':'i-eye')); t.setAttribute('aria-label', shown?'Hide password':'Show password'); paint(); };
+      r.append(t);
+    }
+    if (value && opts.copy){
+      const c = el('button',{className:'iconbtn',type:'button'}); c.setAttribute('aria-label','Copy ' + label.toLowerCase()); c.append(icon('i-copy'));
+      c.onclick = () => copy(value, `${label} copied`);
+      r.append(c);
+    }
+    if (value && opts.link){
+      const safe = /^https?:\/\//i.test(value) ? value : 'https://' + value;
+      const a = el('a',{className:'iconbtn',href:safe,target:'_blank',rel:'noopener noreferrer'}); a.setAttribute('aria-label','Open website'); a.append(icon('i-open'));
+      r.append(a);
+    }
+    return r;
+  }
+  $('dClose').addEventListener('click', () => $('detailScrim').classList.add('hidden'));
+  $('dEdit').addEventListener('click', () => { $('detailScrim').classList.add('hidden'); openEditor(detailId); });
+
+  async function copy(text, msg){
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch(e){}
+    if (!ok){
+      const ta = el('textarea',{value:text}); ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.append(ta); ta.select();
+      try { ok = document.execCommand('copy'); } catch(e){}
+      ta.remove();
+    }
+    toast(ok ? msg : "Couldn't copy — tap the eye to reveal it", ok);
+  }
+
+  // ---------- editor ----------
+  function openEditor(id){
+    editingId = id || null;
+    const e = entries.find(x => x.id === id) || {};
+    $('editTitle').textContent = id ? 'Edit Login' : 'New Login';
+    $('fTitle').value = e.title || ''; $('fUser').value = e.user || ''; $('fPass').value = e.pass || '';
+    $('fUrl').value = e.url || ''; $('fNotes').value = e.notes || '';
+    const sel = $('fCat'); sel.textContent = '';
+    const current = e.cat || (FOLDERS.includes(filter) ? filter : 'Personal');
+    const opts = FOLDERS.includes(current) ? FOLDERS : [...FOLDERS, current];
+    opts.forEach(c => sel.append(el('option',{value:c,textContent:c})));
+    sel.value = current;
+    setPwVisible(false);
+    updateMeter(); updateSave();
+    $('editScrim').classList.remove('hidden');
+    setTimeout(() => $('fTitle').focus(), 60);
+  }
+  function setPwVisible(v){ $('fPass').type = v ? 'text' : 'password'; const b=$('fShow'); b.textContent=''; b.append(icon(v?'i-eyeoff':'i-eye')); b.setAttribute('aria-label', v?'Hide password':'Show password'); }
+  function updateSave(){ $('editSave').disabled = !$('fTitle').value.trim(); }
+  $('fTitle').addEventListener('input', updateSave);
+  $('addBtn').addEventListener('click', () => openEditor(null));
+  $('editCancel').addEventListener('click', () => { $('editScrim').classList.add('hidden'); if (editingId) openDetail(editingId); });
+  $('fShow').addEventListener('click', () => setPwVisible($('fPass').type === 'password'));
+  $('fGen').addEventListener('click', () => { $('fPass').value = generate(20); setPwVisible(true); updateMeter(); });
+  $('fPass').addEventListener('input', updateMeter);
+  $('editForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const data = {
+      title: $('fTitle').value.trim(), user: $('fUser').value.trim(), pass: $('fPass').value,
+      url: $('fUrl').value.trim(), cat: $('fCat').value.trim(), notes: $('fNotes').value.trim(), updated: Date.now()
+    };
+    if (!data.title) return;
+    let id = editingId;
+    if (id) entries = entries.map(x => x.id === id ? {...x, ...data} : x);
+    else { id = crypto.getRandomValues(new Uint32Array(2)).join('-'); entries.push({id, ...data}); }
+    await persist();
+    $('editScrim').classList.add('hidden'); render();
+    toast(editingId ? 'Changes saved' : 'Login saved');
+    openDetail(id);
+  });
+  function generate(n){
+    const lower='abcdefghijkmnopqrstuvwxyz', upper='ABCDEFGHJKLMNPQRSTUVWXYZ', digits='23456789', sym='!@#$%^&*-_=+?';
+    const all = lower+upper+digits+sym;
+    const pick = set => { const lim = 256 - (256 % set.length); let b; do { b = crypto.getRandomValues(new Uint8Array(1))[0]; } while (b >= lim); return set[b % set.length]; };
+    const out = [pick(lower), pick(upper), pick(digits), pick(sym)];
+    while (out.length < n) out.push(pick(all));
+    for (let i = out.length-1; i > 0; i--){ const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i+1); [out[i],out[j]]=[out[j],out[i]]; }
+    return out.join('');
+  }
+  function updateMeter(){
+    const s = strength($('fPass').value);
+    $('meterBar').style.width = s ? s.w : '0'; $('meterBar').style.background = s ? s.c : 'transparent';
+    $('meterLabel').textContent = s ? s.t : ''; $('meterLabel').style.color = s ? s.c : '';
+  }
+
+  // ---------- settings ----------
+  $('menuBtn').addEventListener('click', () => $('menuScrim').classList.remove('hidden'));
+  $('menuClose').addEventListener('click', () => $('menuScrim').classList.add('hidden'));
+  $('mExport').addEventListener('click', async () => {
+    const v = readVault() || await persist();
+    const filename = `stash-backup-${new Date().toISOString().slice(0,10)}.json`;
+    const r = await saveFile(filename, JSON.stringify(v, null, 2), 'application/json');
+    if (r === 'saved') toast('Backup saved'); else if (r === 'failed') toast("Couldn't save the backup", false);
+  });
+  $('mImport').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', async ev => {
+    const f = ev.target.files[0]; ev.target.value = '';
+    if (!f) return;
+    let v; try { v = JSON.parse(await f.text()); } catch(e){ toast("That file isn't a Stash backup", false); return; }
+    if (!v || v.app !== 'stash' || !(isV2(v) || isV1(v))){ toast("That file isn't a Stash backup", false); return; }
+    if (!(await askConfirm({title:'Restore this backup?', message:"It replaces everything here. You'll unlock it with the master password (or recovery code) it was saved with.", ok:'Restore'}))) return;
+    writeVault(v); showLock(); toast('Backup restored — unlock with its password');
+  });
+  $('mWipe').addEventListener('click', async () => {
+    if (await askConfirm({title:'Erase Stash?', message:'Every login will be permanently deleted. This cannot be undone.', ok:'Erase Everything'})){ wipeVault(); showLock(); }
+  });
+  $('mRecovery').addEventListener('click', async () => {
+    if (!(await askConfirm({title:'Create a new recovery code?', message:'Your current recovery code will stop working. Backups saved earlier still open with the old one.', ok:'Create New Code', danger:false}))) return;
+    $('menuScrim').classList.add('hidden');
+    const code = await issueRecoveryCode();
+    await showRecovery(code);
+    toast('New recovery code is active');
+  });
+  $('mChange').addEventListener('click', () => {
+    $('menuScrim').classList.add('hidden');
+    ['pwOld','pwNew','pwNew2'].forEach(i => $(i).value=''); $('pwMsg').textContent='';
+    $('pwScrim').classList.remove('hidden'); setTimeout(()=>$('pwOld').focus(),60);
+  });
+  $('pwCancel').addEventListener('click', () => $('pwScrim').classList.add('hidden'));
+  $('pwForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const m = $('pwMsg'); m.textContent = '';
+    try { await unwrap(wrapPw, $('pwOld').value); } catch(e){ m.textContent = 'Current password is incorrect'; return; }
+    const n = $('pwNew').value;
+    if (n.length < MIN_PW){ m.textContent = `Use at least ${MIN_PW} characters`; return; }
+    if (n !== $('pwNew2').value){ m.textContent = "New passwords don't match"; return; }
+    wrapPw = await wrap(dkRaw, n);
+    await persist(); $('pwScrim').classList.add('hidden'); toast('Master password changed');
+  });
+
+  SHEETS.forEach(id => $(id).addEventListener('click', e => { if (e.target.id === id) $(id).classList.add('hidden'); }));
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (confirmResolve) finishConfirm(false); else closeAll(); });
+  function closeAll(){ SHEETS.forEach(id => $(id).classList.add('hidden')); }
+
+  // In-app confirm (browser confirm() popups are blocked inside published pages)
+  let confirmResolve = null;
+  function askConfirm({title, message, ok, danger = true}){
+    if (confirmResolve) confirmResolve(false);
+    $('cTitle').textContent = title; $('cMsg').textContent = message || '';
+    $('cMsg').classList.toggle('hidden', !message);
+    const b = $('cOk'); b.textContent = ok; b.classList.toggle('danger', danger);
+    $('confirmScrim').classList.remove('hidden');
+    setTimeout(() => $('cCancel').focus(), 30);
+    return new Promise(res => { confirmResolve = res; });
+  }
+  function finishConfirm(v){ $('confirmScrim').classList.add('hidden'); const r = confirmResolve; confirmResolve = null; if (r) r(v); }
+  $('cOk').addEventListener('click', () => finishConfirm(true));
+  $('cCancel').addEventListener('click', () => finishConfirm(false));
+  $('confirmScrim').addEventListener('click', e => { if (e.target.id === 'confirmScrim') finishConfirm(false); });
+
+  let toastT;
+  function toast(t, ok = true){
+    const n=$('toast'); n.textContent='';
+    if (ok) n.append(icon('i-check'));
+    n.append(document.createTextNode(t));
+    n.classList.remove('hidden'); clearTimeout(toastT); toastT=setTimeout(()=>n.classList.add('hidden'),2200);
+  }
+
+  if (!window.crypto || !crypto.subtle){
+    $('lockSub').textContent = "This browser can't encrypt, so Stash can't run here.";
+    $('lockForm').classList.add('hidden');
+  } else showLock();
+
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+})();
+</script>
+</body>
+</html>
