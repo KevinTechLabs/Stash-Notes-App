@@ -54,7 +54,7 @@ Stash v2 is a rebuild of Stash as an installable phone app. It adds to the home 
 - **Recovery codes:** a 24-character recovery code can reset a forgotten master password without losing any logins.
 - **Works offline:** after the first install, Stash opens without a network connection.
 - **Password generator** with a strength meter, and a warning dot on weak saved passwords.
-- **Folders:** Personal, Gaming, Shopping, Social Media, Banking and Other, with filter chips.
+- **Folders:** Personal, Gaming, Shopping, Social Media, Banking, Homelab and Other, with filter chips.
 - **Search** across sites, usernames, websites, notes and folders.
 - **One-tap copy** for usernames and passwords.
 - **Encrypted backups** that open with either the master password or the recovery code.
