@@ -4,6 +4,27 @@ Stash is a small, self-hosted personal notes application built for keeping organ
 
 Because Stash can contain real credentials, the deployed version includes encryption, authentication, session isolation, automatic locking, HTTPS access through Tailscale, firewall hardening, and encrypted backups.
 
+## Stash v2 at a glance
+
+<table>
+<tr>
+<td align="center"><strong>Unlock</strong></td>
+<td align="center"><strong>Logins</strong></td>
+<td align="center"><strong>Login details</strong></td>
+<td align="center"><strong>New login</strong></td>
+<td align="center"><strong>Recovery code</strong></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/images/v2-unlock.png" width="160" alt="Stash v2 unlock screen"></td>
+<td align="center"><img src="docs/images/v2-home.png" width="160" alt="Stash v2 login list"></td>
+<td align="center"><img src="docs/images/v2-login-detail.png" width="160" alt="Stash v2 login details"></td>
+<td align="center"><img src="docs/images/v2-new-login.png" width="160" alt="Stash v2 new login form with password generator"></td>
+<td align="center"><img src="docs/images/v2-recovery-code.png" width="160" alt="Stash v2 recovery code screen"></td>
+</tr>
+</table>
+
+<sub>Screenshots use made-up sample data.</sub>
+
 ## Versions
 
 | | **Stash v2** (latest) | **Stash v1** (original) |
@@ -25,25 +46,6 @@ v1 is kept in this repository unchanged so the project history shows how Stash e
 # Stash v2
 
 Stash v2 is a rebuild of Stash as an installable phone app. It adds to the home screen with its own icon, opens full screen, works offline, and keeps every login encrypted on the device. The server only hands out the app's files; it never sees or stores your logins.
-
-<table>
-<tr>
-<td align="center"><strong>Unlock</strong></td>
-<td align="center"><strong>Logins</strong></td>
-<td align="center"><strong>Login details</strong></td>
-<td align="center"><strong>New login</strong></td>
-<td align="center"><strong>Recovery code</strong></td>
-</tr>
-<tr>
-<td align="center"><img src="docs/images/v2-unlock.png" width="160" alt="Stash v2 unlock screen"></td>
-<td align="center"><img src="docs/images/v2-home.png" width="160" alt="Stash v2 login list"></td>
-<td align="center"><img src="docs/images/v2-login-detail.png" width="160" alt="Stash v2 login details"></td>
-<td align="center"><img src="docs/images/v2-new-login.png" width="160" alt="Stash v2 new login form with password generator"></td>
-<td align="center"><img src="docs/images/v2-recovery-code.png" width="160" alt="Stash v2 recovery code screen"></td>
-</tr>
-</table>
-
-<sub>Screenshots use made-up sample data.</sub>
 
 ### What's new in v2
 
