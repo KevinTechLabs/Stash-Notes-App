@@ -16,7 +16,7 @@ token, address or other private detail, please report it the same way.
 
 ## Supported versions
 
-Only **Stash v2** (`v2/`) on `main` is supported. Stash v1 (`v1/`) is kept for project history and no longer receives fixes.
+Only **Stash v2** (`v2/`) on `main` is supported. Stash v1 (`app.py`) is kept for project history and no longer receives fixes.
 
 ## What's already in place
 
