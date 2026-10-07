@@ -1,5 +1,7 @@
 # Stash Notes App
 
+[![CI](https://github.com/KevinTechLabs/Stash-Notes-App/actions/workflows/ci.yml/badge.svg)](https://github.com/KevinTechLabs/Stash-Notes-App/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Stash is a small, self-hosted personal notes application built for keeping organized records such as account usernames, passwords, categories, and notes. It is intentionally a **notes app**, not a full password-manager replacement.
 
 Because Stash can contain real credentials, the deployed version includes encryption, authentication, session isolation, automatic locking, HTTPS access through Tailscale, firewall hardening, and encrypted backups.
@@ -166,10 +168,18 @@ source venv/bin/activate
 Install the application dependencies used by the deployed version:
 
 ```bash
-pip install flask cryptography gunicorn
+pip install -r requirements.txt   # flask, cryptography, gunicorn
 ```
 
 The production application is run by systemd/Gunicorn rather than Flask's development server.
+
+## Tests
+
+```bash
+python3 -m unittest discover -s tests -v   # or: pytest
+```
+
+They cover key derivation, encryption at rest, login and lockout, idle auto-lock, CSRF and the add/edit/delete flow, each against a throwaway database. CI runs them with ruff and bandit on every push and pull request.
 
 ## Basic operation
 
@@ -293,3 +303,7 @@ The deployed Stash setup has been completed and tested for normal login/use, mob
 - `docs/SETUP.md` — step-by-step deployment and configuration history.
 - `docs/SECURITY.md` — security model, secrets, network exposure, and operational precautions.
 - `docs/BACKUPS.md` — backup, encryption, verification, and recovery procedures.
+
+## License
+
+[MIT](LICENSE)

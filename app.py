@@ -1,19 +1,16 @@
-from flask import session
-import os
-import json
 import base64
+import hmac
+import json
+import os
 import secrets
 import sqlite3
-import hmac
 import time
-
 from datetime import timedelta
 
-from flask import Flask, request, redirect, render_template_string
-from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
-
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from flask import Flask, redirect, render_template_string, request, session
 
 # ==================================================
 # STASH
@@ -60,7 +57,7 @@ def add_pwa_headers(response):
 
 # Generate a permanent Flask secret if one doesn't exist.
 if os.path.exists(SESSION_SECRET_FILE):
-    with open(SESSION_SECRET_FILE, "r") as f:
+    with open(SESSION_SECRET_FILE) as f:
         app.secret_key = f.read().strip()
 else:
     app.secret_key = secrets.token_hex(32)
@@ -184,10 +181,9 @@ def check_auto_lock():
     now = time.time()
     last_activity = SESSION_ACTIVITY.get(sid)
 
-    if last_activity is not None:
-        if now - last_activity >= AUTO_LOCK_SECONDS:
-            clear_stash_session()
-            return redirect("/login")
+    if last_activity is not None and now - last_activity >= AUTO_LOCK_SECONDS:
+        clear_stash_session()
+        return redirect("/login")
 
     SESSION_ACTIVITY[sid] = now
 
@@ -252,7 +248,7 @@ def unlock(password):
     if not os.path.exists(CONFIG_FILE):
         return None
 
-    with open(CONFIG_FILE, "r") as f:
+    with open(CONFIG_FILE) as f:
         config = json.load(f)
 
     salt = base64.b64decode(config["salt"])
@@ -1728,7 +1724,7 @@ Stash
 👤 <strong>Username:</strong>
 
 <span id="username-{{ entry["id"] }}">{{ entry["username"] }}</span>
-    
+
 
 </div>
 
@@ -1746,7 +1742,7 @@ Stash
     readonly
     autocomplete="off"
 >
-    
+
 
 <button
     type="button"
@@ -1876,8 +1872,9 @@ def home():
                 }
             )
 
-        except Exception:
-            pass
+        except (InvalidToken, UnicodeDecodeError):
+            # A row that doesn't decrypt with this key is skipped, not shown as garbage.
+            continue
 
     return render_template_string(MAIN_HTML, entries=entries, csrf_token=CSRF_TOKEN)
 
@@ -1965,6 +1962,7 @@ def edit(entry_id):
 
     if request.method == "POST":
         if not csrf_valid():
+            db.close()
             return "Invalid request.", 403
 
         name = request.form.get("name", "").strip()
