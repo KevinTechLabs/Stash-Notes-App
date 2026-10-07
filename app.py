@@ -42,6 +42,7 @@ PWA_HEAD = """
 <meta name="apple-mobile-web-app-title" content="Stash">
 """
 
+
 @app.after_request
 def add_pwa_headers(response):
     content_type = response.headers.get("Content-Type", "")
@@ -50,16 +51,11 @@ def add_pwa_headers(response):
         html = response.get_data(as_text=True)
 
         if "apple-mobile-web-app-capable" not in html:
-            html = html.replace(
-                "<head>",
-                "<head>" + PWA_HEAD,
-                1
-            )
+            html = html.replace("<head>", "<head>" + PWA_HEAD, 1)
 
             response.set_data(html)
 
     return response
-
 
 
 # Generate a permanent Flask secret if one doesn't exist.
@@ -91,7 +87,7 @@ LAST_ACTIVITY = None
 # CSRF protection token.
 CSRF_TOKEN = secrets.token_urlsafe(32)
 
-    
+
 # Login protection
 FAILED_LOGIN_ATTEMPTS = 0
 LOGIN_LOCKOUT_UNTIL = 0
@@ -102,6 +98,7 @@ LOGIN_LOCKOUT_SECONDS = 60
 # ==================================================
 # SECURITY HEADERS
 # ==================================================
+
 
 @app.after_request
 def add_security_headers(response):
@@ -120,8 +117,6 @@ def add_security_headers(response):
         "base-uri 'self'"
     )
     return response
-
-
 
 
 # ==================================================
@@ -171,6 +166,7 @@ def clear_stash_session():
 # ==================================================
 # DATABASE
 # ==================================================
+
 
 @app.before_request
 def check_auto_lock():
@@ -227,13 +223,9 @@ def init_db():
 # ENCRYPTION
 # ==================================================
 
+
 def derive_key(password, salt):
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=64,
-        salt=salt,
-        iterations=600000
-    )
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=64, salt=salt, iterations=600000)
 
     derived = kdf.derive(password.encode("utf-8"))
 
@@ -248,10 +240,7 @@ def create_config(password):
 
     encryption_key, verifier = derive_key(password, salt)
 
-    config = {
-        "salt": base64.b64encode(salt).decode(),
-        "verifier": base64.b64encode(verifier).decode()
-    }
+    config = {"salt": base64.b64encode(salt).decode(), "verifier": base64.b64encode(verifier).decode()}
 
     with open(CONFIG_FILE, "w") as f:
         json.dump(config, f)
@@ -281,18 +270,14 @@ def encrypt(fernet, value):
     if value is None:
         value = ""
 
-    return fernet.encrypt(
-        value.encode("utf-8")
-    ).decode()
+    return fernet.encrypt(value.encode("utf-8")).decode()
 
 
 def decrypt(fernet, value):
     if not value:
         return ""
 
-    return fernet.decrypt(
-        value.encode("utf-8")
-    ).decode()
+    return fernet.decrypt(value.encode("utf-8")).decode()
 
 
 # ==================================================
@@ -803,10 +788,7 @@ function toggleCategory(category) {
 
 
 def csrf_valid():
-    return hmac.compare_digest(
-        request.form.get("csrf_token", ""),
-        CSRF_TOKEN
-    )
+    return hmac.compare_digest(request.form.get("csrf_token", ""), CSRF_TOKEN)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -819,7 +801,6 @@ def login():
     error = None
 
     if request.method == "POST":
-
         now = time.time()
 
         if now < LOGIN_LOCKOUT_UNTIL:
@@ -827,11 +808,9 @@ def login():
             error = f"Too many failed attempts. Try again in {remaining} seconds."
 
         else:
-
             password = request.form.get("password", "")
 
             if setup:
-
                 confirm = request.form.get("confirm", "")
 
                 if len(password) < 12:
@@ -852,11 +831,9 @@ def login():
                     return redirect("/")
 
             else:
-
                 fernet = unlock(password)
 
                 if fernet is None:
-
                     FAILED_LOGIN_ATTEMPTS += 1
 
                     if FAILED_LOGIN_ATTEMPTS >= MAX_FAILED_LOGIN_ATTEMPTS:
@@ -868,7 +845,6 @@ def login():
                         error = f"Incorrect master password. {remaining} attempts remaining."
 
                 else:
-
                     create_stash_session(fernet)
 
                     FAILED_LOGIN_ATTEMPTS = 0
@@ -876,12 +852,7 @@ def login():
 
                     return redirect("/")
 
-    return render_template_string(
-        LOGIN_HTML,
-        setup=setup,
-        error=error,
-        csrf_token=CSRF_TOKEN
-    )
+    return render_template_string(LOGIN_HTML, setup=setup, error=error, csrf_token=CSRF_TOKEN)
 
 
 # ==================================================
@@ -1867,10 +1838,10 @@ Tap <strong>Add Entry</strong> to save your first note.
 """
 
 
-
 # ==================================================
 # HOME
 # ==================================================
+
 
 @app.route("/")
 def home():
@@ -1893,52 +1864,28 @@ def home():
     entries = []
 
     for row in rows:
-
         try:
-
-            entries.append({
-
-                "id": row["id"],
-
-                "name": decrypt(
-                    fernet,
-                    row["name"]
-                ),
-
-                "username": decrypt(
-                    fernet,
-                    row["username"]
-                ),
-
-                "password": decrypt(
-                    fernet,
-                    row["password"]
-                ),
-
-                "category": decrypt(
-                    fernet,
-                    row["category"]
-                ),
-
-                "notes": decrypt(
-                    fernet,
-                    row["notes"]
-                )
-            })
+            entries.append(
+                {
+                    "id": row["id"],
+                    "name": decrypt(fernet, row["name"]),
+                    "username": decrypt(fernet, row["username"]),
+                    "password": decrypt(fernet, row["password"]),
+                    "category": decrypt(fernet, row["category"]),
+                    "notes": decrypt(fernet, row["notes"]),
+                }
+            )
 
         except Exception:
             pass
 
-    return render_template_string(
-        MAIN_HTML,
-        entries=entries,
-        csrf_token=CSRF_TOKEN
-    )
+    return render_template_string(MAIN_HTML, entries=entries, csrf_token=CSRF_TOKEN)
 
 
 # ==================================================
 # ADD
 # ==================================================
+
 
 @app.route("/add", methods=["POST"])
 def add():
@@ -1962,17 +1909,20 @@ def add():
 
     db = get_db()
 
-    db.execute("""
+    db.execute(
+        """
         INSERT INTO entries
         (name, username, password, category, notes)
         VALUES (?, ?, ?, ?, ?)
-    """, (
-        encrypt(fernet, name),
-        encrypt(fernet, username),
-        encrypt(fernet, password),
-        encrypt(fernet, category),
-        encrypt(fernet, notes)
-    ))
+    """,
+        (
+            encrypt(fernet, name),
+            encrypt(fernet, username),
+            encrypt(fernet, password),
+            encrypt(fernet, category),
+            encrypt(fernet, notes),
+        ),
+    )
 
     db.commit()
     db.close()
@@ -1989,6 +1939,7 @@ def add():
 # EDIT
 # ==============================
 
+
 @app.route("/edit/<int:entry_id>", methods=["GET", "POST"])
 def edit(entry_id):
     fernet = get_current_fernet()
@@ -1997,10 +1948,7 @@ def edit(entry_id):
         return redirect("/login")
 
     db = get_db()
-    row = db.execute(
-        "SELECT * FROM entries WHERE id = ?",
-        (entry_id,)
-    ).fetchone()
+    row = db.execute("SELECT * FROM entries WHERE id = ?", (entry_id,)).fetchone()
 
     if row is None:
         db.close()
@@ -2210,6 +2158,7 @@ Show password
 # DELETE
 # ==============================
 
+
 @app.route("/delete/<int:entry_id>", methods=["POST"])
 def delete(entry_id):
     if not csrf_valid():
@@ -2222,10 +2171,7 @@ def delete(entry_id):
 
     db = get_db()
 
-    db.execute(
-        "DELETE FROM entries WHERE id=?",
-        (entry_id,)
-    )
+    db.execute("DELETE FROM entries WHERE id=?", (entry_id,))
 
     db.commit()
     db.close()
@@ -2246,10 +2192,6 @@ def logout():
 # ==================================================
 
 if __name__ == "__main__":
-
     init_db()
 
-    app.run(
-        host="127.0.0.1",
-        port=5000
-    )
+    app.run(host="127.0.0.1", port=5000)
