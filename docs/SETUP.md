@@ -229,7 +229,7 @@ The GPG passphrase is separate from the Stash master password and must be stored
 For a future rebuild:
 
 1. Install Ubuntu/Python and create `~/stash`.
-2. Restore `app.py` from source control or a trusted application backup.
+2. Restore `app.py` from source control (`v1/app.py` in this repository) or a trusted application backup.
 3. Create the virtual environment and install Flask, cryptography, and Gunicorn.
 4. Restore `stash.db`, `stash_config.json`, and `stash_session_secret` from a trusted backup.
 5. Configure the `stash.service` systemd unit.

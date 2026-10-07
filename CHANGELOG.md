@@ -1,5 +1,10 @@
 # Changelog
 
+## Repository layout
+
+- Stash v1 moved from the repository root into [`v1/`](v1/), with its screenshots in `v1/screenshots/`. The code is unchanged.
+- Removed `docs/images/stash-unlock.jpg`, which was a broken (truncated, non-image) file that nothing linked to.
+
 ## v2.0 — Stash v2
 
 A ground-up rebuild of Stash as an installable phone app. The new version lives in [`v2/`](v2/). v1 is unchanged and remains in the repository root.
