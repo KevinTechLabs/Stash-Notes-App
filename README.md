@@ -79,9 +79,9 @@ These are screenshots of the actual Stash app running on a mobile device.
 <td align="center"><strong>Add Entry</strong></td>
 </tr>
 <tr>
-<td align="center"><img src="IMG_0793.jpeg" width="220" alt="Stash unlock screen"></td>
-<td align="center"><img src="IMG_0794.png" width="220" alt="Stash main screen"></td>
-<td align="center"><img src="IMG_0795.png" width="220" alt="Stash add entry screen"></td>
+<td align="center"><img src="docs/images/unlock.jpeg" width="220" alt="Stash unlock screen"></td>
+<td align="center"><img src="docs/images/entries.png" width="220" alt="Stash main screen"></td>
+<td align="center"><img src="docs/images/add-entry.png" width="220" alt="Stash add entry screen"></td>
 </tr>
 </table>
 
