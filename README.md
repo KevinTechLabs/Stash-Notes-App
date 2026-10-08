@@ -38,6 +38,7 @@ Stash started as a personal notes app for credentials (v1) and grew into a full 
 | Key derivation | PBKDF2-HMAC-SHA256, 600,000 rounds | PBKDF2-HMAC-SHA256, 600,000 rounds |
 | Minimum master password | 12 characters | 12 characters |
 | Forgot master password | Reset with a recovery code | Not supported |
+| 2FA codes | Built-in rotating codes per login, with countdown and copy | Not supported |
 | Works offline | Yes | No |
 | Backups | Encrypted backup file from inside the app | Manual GPG-encrypted archive |
 | Auto-lock | 5 minutes idle + manual lock | 15 minutes + manual lock |
