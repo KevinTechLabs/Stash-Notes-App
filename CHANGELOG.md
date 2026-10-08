@@ -13,6 +13,7 @@ A ground-up rebuild of Stash as an installable password manager for your phone. 
 - Encrypted backup export and restore from inside the app.
 - Password generator with a strength meter.
 - Weak-password indicator on saved logins.
+- Built-in 2FA codes: add a setup key or `otpauth://` link to a login and Stash shows its rotating 6-digit code with a countdown and one-tap copy.
 - Folder filter chips: Personal, Gaming, Shopping, Social Media, Banking, Homelab and Other.
 - Search across site, username, website, notes and folder.
 - One-tap copy for usernames and passwords; show/hide for passwords.

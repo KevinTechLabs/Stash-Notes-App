@@ -87,6 +87,12 @@ Replace the files in the served folder, then open the app with Tailscale connect
 - Copied passwords and recovery codes are wiped from the clipboard after 30 seconds, and when Stash locks. Browsers only allow this while Stash is open, so if you switch away first, the wipe happens as soon as you come back.
 - A revealed password hides itself again after 20 seconds.
 
+### 2FA codes
+
+- A login can store a 2FA setup key (base32) or an `otpauth://totp/...` link. Stash generates the time-based code (TOTP, RFC 6238) on the device with the Web Crypto API; SHA-1, SHA-256 and SHA-512, 6–8 digits and custom periods are supported.
+- The key is saved inside the encrypted vault like every other field, and copied codes are cleared from the clipboard after 30 seconds.
+- Keeping a site's password and its 2FA key in the same vault is convenient, but it means anyone who unlocks Stash has both. For your most important accounts, especially your email and any other password manager, consider keeping their 2FA in a separate authenticator app.
+
 ### Upgrades from earlier v2 data
 
 Data saved by early v2 builds (310,000 PBKDF2 rounds) still opens. On the next unlock the master-password key is re-wrapped at 600,000 rounds automatically, and the recovery-code key is re-wrapped the next time the recovery code is used. Existing master passwords shorter than 12 characters still unlock, and Stash shows a reminder to change them.
