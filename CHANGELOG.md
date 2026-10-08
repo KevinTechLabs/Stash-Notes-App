@@ -13,6 +13,11 @@ A ground-up rebuild of Stash as an installable password manager for your phone. 
 - Encrypted backup export and restore from inside the app.
 - Password generator with a strength meter.
 - Weak-password indicator on saved logins.
+- Argon2id (64 MiB, 3 passes) for the master-password key; existing vaults and backups upgrade automatically on the next unlock.
+- Instant lock when Stash leaves the screen, with a short grace period while editing.
+- Growing delay after 5 wrong master passwords or recovery codes, up to 15 minutes.
+- Strict Content Security Policy; the app loads nothing from other websites and uses system fonts.
+- Wazuh file integrity monitoring guide for the served app files (`docs/MONITORING.md`).
 - Built-in 2FA codes: add a setup key or `otpauth://` link to a login and Stash shows its rotating 6-digit code with a countdown and one-tap copy.
 - Folder filter chips: Personal, Gaming, Shopping, Social Media, Banking, Homelab and Other.
 - Search across site, username, website, notes and folder.

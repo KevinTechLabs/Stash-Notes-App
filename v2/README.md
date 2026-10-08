@@ -1,12 +1,14 @@
 # Stash v2
 
-Stash v2 is a self-hosted password manager built as a self-contained, installable web app (PWA). It is plain HTML, CSS and JavaScript with no build step, no dependencies and no backend. All encryption happens in the browser using the Web Crypto API, and logins are stored encrypted on the device.
+Stash v2 is a self-hosted password manager built as a self-contained, installable web app (PWA). It is plain HTML, CSS and JavaScript with no build step and no backend. All encryption happens in the browser using the Web Crypto API and a bundled Argon2 module, and logins are stored encrypted on the device. The app loads nothing from other websites.
 
 ## Files
 
 ```text
 v2/
-├── index.html            # the whole app: interface, logic, encryption
+├── index.html            # the interface and its security policy
+├── app.js                # app logic and encryption
+├── vendor/               # Argon2 (argon2-browser, MIT): argon2.js, argon2-glue.js, argon2.wasm
 ├── manifest.json         # name, icons and colors for "Add to Home Screen"
 ├── sw.js                 # service worker: caches the app so it works offline
 ├── icon-192.png          # app icons
@@ -58,7 +60,8 @@ Replace the files in the served folder, then open the app with Tailscale connect
 - The data key is stored twice, each copy encrypted (wrapped) with AES-256-GCM:
   - once with a key derived from the **master password**
   - once with a key derived from the **recovery code**
-- Both derived keys use **PBKDF2-HMAC-SHA256** with **600,000 rounds** and a random 16-byte salt per wrap.
+- The master-password key uses **Argon2id** (RFC 9106) with **64 MiB of memory, 3 passes** and a random 16-byte salt. Every guess costs that much memory and time, which makes guessing on GPUs or custom hardware far slower than with PBKDF2. The bundled module is checked against the RFC 9106 test vector.
+- The recovery-code key uses **PBKDF2-HMAC-SHA256** with **600,000 rounds**. The code already has 120 bits of randomness, so a slower function would add nothing.
 - Changing the master password only re-wraps the data key; the logins and recovery code are unaffected.
 
 ### Master password and recovery code
@@ -79,8 +82,20 @@ Replace the files in the served folder, then open the app with Tailscale connect
 
 ### Locking
 
-- Stash locks after 5 minutes of inactivity, and on demand with the lock button.
+- Stash locks **as soon as it leaves the screen** (switching apps, going home, locking the phone). Exceptions: while a file picker or share sheet Stash opened is showing, while the recovery code is on screen, and while a login is being edited, where there are 60 seconds to copy something from another app.
+- It also locks after 5 minutes of inactivity, and on demand with the lock button.
 - When locked, the decrypted logins and keys are cleared from memory.
+
+### Wrong-attempt delay
+
+- After 5 wrong master passwords or recovery codes, Stash makes you wait 30 seconds, doubling with each further miss up to 15 minutes. The counter survives reloads and resets after a successful unlock.
+- This slows down guessing on the phone itself. Someone who copies the encrypted data off the phone isn't limited by it, which is what Argon2id is for.
+
+### No outside content
+
+- A strict Content Security Policy only allows the app's own files: no outside scripts, fonts, images or connections, no plugins, and no form submissions. This blocks injected code from loading anything or sending your data anywhere.
+- Text uses the phone's built-in system fonts instead of downloaded ones.
+- The offline cache only stores Stash's own files and always fetches fresh copies when online, so an update never mixes old and new files.
 
 ### Clipboard and screen
 
@@ -95,8 +110,8 @@ Replace the files in the served folder, then open the app with Tailscale connect
 
 ### Upgrades from earlier v2 data
 
-Data saved by early v2 builds (310,000 PBKDF2 rounds) still opens. On the next unlock the master-password key is re-wrapped at 600,000 rounds automatically, and the recovery-code key is re-wrapped the next time the recovery code is used. Existing master passwords shorter than 12 characters still unlock, and Stash shows a reminder to change them.
+Data saved by earlier v2 builds (PBKDF2, 310,000 or 600,000 rounds) still opens, as do backups made with them. On the next unlock the master-password key is re-wrapped with Argon2id automatically, and the recovery-code key is re-wrapped the next time the recovery code is used. Existing master passwords shorter than 12 characters still unlock, and Stash shows a reminder to change them.
 
 ### Limitations
 
-Stash is a personal project and has not been independently audited. Anyone who controls the server's copy of these files controls the app code the phone loads, so keep the server secure. For the most sensitive accounts, use two-factor authentication as well.
+Stash is a personal project and has not been independently audited. Anyone who controls the server's copy of these files controls the app code the phone loads, so keep the server secure, and see [`docs/MONITORING.md`](../docs/MONITORING.md) for alerting on any change to them. For the most sensitive accounts, use two-factor authentication as well.

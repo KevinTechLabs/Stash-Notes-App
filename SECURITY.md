@@ -21,7 +21,9 @@ Only **Stash v2** (`v2/`) on `main` is supported. Stash v1 (`app.py`) is kept fo
 ## What's already in place
 
 - Logins are encrypted on the device with AES-256-GCM before they are saved; the server only serves the app's files.
-- The key is derived from the master password with PBKDF2-HMAC-SHA256 (600,000 rounds), and the master password must be at least 12 characters.
-- The app locks automatically after 5 minutes idle and can be locked manually.
+- The key is derived from the master password with Argon2id (64 MiB, 3 passes), and the master password must be at least 12 characters. Repeated wrong attempts trigger a growing delay.
+- The app locks as soon as it leaves the screen, after 5 minutes idle, or manually.
+- A strict Content Security Policy stops the app from loading or sending anything to other websites.
+- File integrity monitoring can alert on any change to the served app files (`docs/MONITORING.md`).
 - Backups are encrypted, and access is over HTTPS through Tailscale.
 - Stash is a personal, self-hosted password manager that has not been independently audited.

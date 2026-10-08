@@ -35,13 +35,14 @@ Stash started as a personal notes app for credentials (v1) and grew into a full 
 | Type | Installable phone app (PWA) | Flask web app on the server |
 | Where logins are stored | Encrypted on the phone itself | Encrypted in SQLite on the server |
 | Encryption | AES-256-GCM | Fernet (AES-128-CBC + HMAC-SHA256) |
-| Key derivation | PBKDF2-HMAC-SHA256, 600,000 rounds | PBKDF2-HMAC-SHA256, 600,000 rounds |
+| Key derivation | Argon2id, 64 MiB, 3 passes | PBKDF2-HMAC-SHA256, 600,000 rounds |
 | Minimum master password | 12 characters | 12 characters |
 | Forgot master password | Reset with a recovery code | Not supported |
 | 2FA codes | Built-in rotating codes per login, with countdown and copy | Not supported |
+| Wrong-password protection | Growing delay after 5 misses, up to 15 minutes | Not supported |
 | Works offline | Yes | No |
 | Backups | Encrypted backup file from inside the app | Manual GPG-encrypted archive |
-| Auto-lock | 5 minutes idle + manual lock | 15 minutes + manual lock |
+| Auto-lock | Instantly when you leave the app, 5 minutes idle, manual lock | 15 minutes + manual lock |
 | Hosting | Static files via `tailscale serve` (no Python needed) | Gunicorn + systemd + Tailscale Serve |
 
 v1 is kept in this repository unchanged so the project history shows how Stash evolved.
@@ -53,7 +54,9 @@ Stash v2 is a rebuild of Stash as an installable password manager app for your p
 ### What's new in v2
 
 - **Installable app:** add to the home screen on iPhone or Android; runs full screen with its own icon.
-- **On-device encryption:** logins are encrypted with AES-256-GCM before they are saved, using a key protected by your master password.
+- **On-device encryption:** logins are encrypted with AES-256-GCM before they are saved, using a key protected by your master password through Argon2id.
+- **Locks instantly** when you leave the app, and slows down repeated wrong passwords.
+- **Loads nothing from other websites:** a strict content security policy and system fonts.
 - **Recovery codes:** a 24-character recovery code can reset a forgotten master password without losing any logins.
 - **Works offline:** after the first install, Stash opens without a network connection.
 - **Password generator** with a strength meter, and a warning dot on weak saved passwords.
@@ -294,6 +297,7 @@ The deployed Stash setup has been completed and tested for normal login/use, mob
 
 - `v2/README.md` — Stash v2 setup, hosting with Tailscale, and security design.
 - `CHANGELOG.md` — what changed between versions.
+- `docs/MONITORING.md` — Wazuh alerts (and Sentinel/Discord) for any change to the served app files.
 - `docs/SETUP.md` — step-by-step deployment and configuration history.
 - `docs/SECURITY.md` — security model, secrets, network exposure, and operational precautions.
 - `docs/BACKUPS.md` — backup, encryption, verification, and recovery procedures.
