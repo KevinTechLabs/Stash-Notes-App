@@ -1,8 +1,10 @@
-# Stash Notes App
+# Stash Password Manager
 
-Stash is a small, self-hosted personal notes application built for keeping organized records such as account usernames, passwords, categories, and notes. It is intentionally a **notes app**, not a full password-manager replacement.
+Stash is a self-hosted, offline-first password manager for keeping account usernames, passwords and notes organized and encrypted. The current version, **Stash v2**, installs on your phone like a native app and encrypts every login on the device with AES-256-GCM, so the server never sees your passwords.
 
-Because Stash can contain real credentials, the deployed version includes encryption, authentication, session isolation, automatic locking, HTTPS access through Tailscale, firewall hardening, and encrypted backups.
+Stash started as a personal notes app for credentials (v1) and grew into a full password manager with a password generator, weak-password warnings, recovery codes, encrypted backups and offline support (v2). Both versions are kept in this repository to show how the project evolved.
+
+> Stash is a personal project and has not been independently audited. For high-risk accounts, use two-factor authentication, and consider a mature, audited password manager alongside it.
 
 ## Stash v2 at a glance
 
@@ -45,7 +47,7 @@ v1 is kept in this repository unchanged so the project history shows how Stash e
 
 # Stash v2
 
-Stash v2 is a rebuild of Stash as an installable phone app. It adds to the home screen with its own icon, opens full screen, works offline, and keeps every login encrypted on the device. The server only hands out the app's files; it never sees or stores your logins.
+Stash v2 is a rebuild of Stash as an installable password manager app for your phone. It adds to the home screen with its own icon, opens full screen, works offline, and keeps every login encrypted on the device. The server only hands out the app's files; it never sees or stores your logins.
 
 ### What's new in v2
 
@@ -66,7 +68,7 @@ See [`v2/README.md`](v2/README.md) for setup and the security design, and [`CHAN
 
 # Stash v1 (original Flask version)
 
-Everything below documents the original server-based version, which remains in this repository as `app.py`.
+Everything below documents the original server-based version, which remains in this repository as `app.py`. v1 began as a personal notes app for keeping account credentials organized, with encryption and hardening added because it held real passwords.
 
 ## What Stash looks like
 
@@ -102,7 +104,7 @@ The application is deliberately bound to localhost. Tailscale Serve provides the
 
 ## Features implemented
 
-### Notes and organization
+### Entries and organization
 
 - Add, edit, and delete entries.
 - Store name, username, password, category, and notes.
@@ -270,7 +272,7 @@ See `docs/BACKUPS.md` for the complete backup and recovery procedure.
 
 ## Security notes
 
-Stash is a personal self-hosted application. It is not intended to replace a mature, professionally audited password manager for high-risk secrets or multi-user deployments.
+Stash is a personal, self-hosted password manager that has not been independently audited. It is designed for one person on a trusted home server, not for multi-user deployments; for high-risk secrets, pair it with two-factor authentication or a mature, audited password manager.
 
 Operational rules:
 

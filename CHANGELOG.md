@@ -2,7 +2,7 @@
 
 ## v2.0 — Stash v2
 
-A ground-up rebuild of Stash as an installable phone app. The new version lives in [`v2/`](v2/). v1 is unchanged and remains in the repository root.
+A ground-up rebuild of Stash as an installable password manager for your phone. The new version lives in [`v2/`](v2/). v1 is unchanged and remains in the repository root.
 
 ### Added
 

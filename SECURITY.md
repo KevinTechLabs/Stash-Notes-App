@@ -5,7 +5,7 @@
 Please **don't open a public issue** for security problems.
 
 Report it privately through GitHub instead:
-<https://github.com/KevinTechLabs/Stash-Notes-App/security/advisories/new>
+<https://github.com/KevinTechLabs/Stash-Password-Manager/security/advisories/new>
 (**Security → Report a vulnerability**). Include what you found, how to
 reproduce it, and what an attacker could do with it. You'll get a reply within
 a few days. Please allow up to 90 days for a fix before disclosing the issue
@@ -24,4 +24,4 @@ Only **Stash v2** (`v2/`) on `main` is supported. Stash v1 (`app.py`) is kept fo
 - The key is derived from the master password with PBKDF2-HMAC-SHA256 (600,000 rounds), and the master password must be at least 12 characters.
 - The app locks automatically after 5 minutes idle and can be locked manually.
 - Backups are encrypted, and access is over HTTPS through Tailscale.
-- Stash is a personal notes app, not a replacement for an audited password manager.
+- Stash is a personal, self-hosted password manager that has not been independently audited.

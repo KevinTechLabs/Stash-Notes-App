@@ -4,9 +4,9 @@ This document records the setup completed for the self-hosted Stash instance so 
 
 ## 1. Application goal
 
-Stash was built as a simple personal notes application. It organizes account information into searchable categories/folders and is designed to be comfortable to use from a phone.
+Stash v1 was built as a simple personal notes application for account credentials. It organizes account information into searchable categories/folders and is designed to be comfortable to use from a phone.
 
-It is not intended to be a drop-in replacement for a dedicated password manager.
+This document covers v1. Stash has since been rebuilt as a password manager (v2); see `v2/README.md` for its setup.
 
 ## 2. Host environment
 

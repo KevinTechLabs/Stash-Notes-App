@@ -1,6 +1,6 @@
 # Stash v2
 
-Stash v2 is a self-contained, installable web app (PWA). It is plain HTML, CSS and JavaScript with no build step, no dependencies and no backend. All encryption happens in the browser using the Web Crypto API, and logins are stored encrypted on the device.
+Stash v2 is a self-hosted password manager built as a self-contained, installable web app (PWA). It is plain HTML, CSS and JavaScript with no build step, no dependencies and no backend. All encryption happens in the browser using the Web Crypto API, and logins are stored encrypted on the device.
 
 ## Files
 

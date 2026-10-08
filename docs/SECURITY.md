@@ -1,4 +1,6 @@
-# Stash Security Notes
+# Stash v1 Security Notes
+
+This document covers Stash v1 (`app.py`). For Stash v2, the current password manager, see the security design in `v2/README.md`.
 
 Stash stores information that may include real account credentials. The deployed configuration therefore treats the application as sensitive even though the repository contains only source/documentation.
 
